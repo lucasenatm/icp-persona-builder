@@ -1,0 +1,189 @@
+<!--
+Template de referência — ICP & Persona Builder.
+Isto é um EXEMPLO PREENCHIDO (empresa fictícia "Acme B2B") pra mostrar estrutura,
+CSS e comportamento responsivo/impressão. Ao gerar o HTML final:
+  - Trocar todo o conteúdo pelo ICP e personas reais construídos na conversa.
+  - Manter a estrutura de seções (cabeçalho, ICP, cartões de persona, rodapé).
+  - Repetir o bloco <section class="persona-card"> uma vez por persona (2 a 4).
+  - Manter tudo autocontido: sem fontes externas, sem CDN, sem JS de terceiros.
+  - O documento precisa funcionar bem tanto na tela quanto impresso (Ctrl+P).
+-->
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ICP & Personas — Acme B2B</title>
+<style>
+  :root{
+    --bg:#f7f7f5; --card:#ffffff; --ink:#1c1c1a; --muted:#6b6b64;
+    --line:#e4e2dc; --accent:#2f5d50; --accent-soft:#e7efec;
+    --tag-assum:#a15c1f; --tag-assum-bg:#fbecdd;
+    --tag-valid:#2f5d50; --tag-valid-bg:#e7efec;
+    --tag-fonte:#3d5a80; --tag-fonte-bg:#e6ecf3;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#15161a; --card:#1e1f24; --ink:#eceae4; --muted:#9a988f;
+      --line:#33343a; --accent:#7fb8a4; --accent-soft:#233330;
+      --tag-assum:#e0a668; --tag-assum-bg:#3a2c1a;
+      --tag-valid:#7fb8a4; --tag-valid-bg:#1c2e29;
+      --tag-fonte:#8fb3d9; --tag-fonte-bg:#20293a;
+    }
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; padding:2.5rem 1.25rem; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.5;
+  }
+  .wrap{max-width:960px; margin:0 auto}
+  header.doc-header{margin-bottom:2.5rem}
+  header.doc-header .eyebrow{
+    text-transform:uppercase; letter-spacing:.08em; font-size:.75rem;
+    color:var(--accent); font-weight:600; margin:0 0 .4rem;
+  }
+  header.doc-header h1{margin:0 0 .3rem; font-size:1.9rem}
+  header.doc-header .meta{color:var(--muted); font-size:.9rem; margin:0}
+
+  section{margin-bottom:2.5rem}
+  h2.section-title{
+    font-size:1.15rem; margin:0 0 1rem; padding-bottom:.5rem;
+    border-bottom:2px solid var(--line);
+  }
+
+  .card{
+    background:var(--card); border:1px solid var(--line); border-radius:12px;
+    padding:1.4rem 1.6rem;
+  }
+
+  .grid-2{display:grid; grid-template-columns:1fr 1fr; gap:1.25rem}
+  @media (max-width:640px){ .grid-2{grid-template-columns:1fr} }
+
+  dl.field-list{margin:0}
+  dl.field-list dt{font-weight:600; font-size:.85rem; color:var(--muted); margin-top:.9rem}
+  dl.field-list dt:first-child{margin-top:0}
+  dl.field-list dd{margin:.15rem 0 0}
+
+  .tag{
+    display:inline-block; font-size:.72rem; font-weight:600; padding:.15rem .55rem;
+    border-radius:999px; margin-right:.3rem;
+  }
+  .tag.valid{color:var(--tag-valid); background:var(--tag-valid-bg)}
+  .tag.assum{color:var(--tag-assum); background:var(--tag-assum-bg)}
+  .tag.fonte{color:var(--tag-fonte); background:var(--tag-fonte-bg)}
+
+  ol.ref-list{margin:0; padding-left:1.3rem; font-size:.9rem}
+  ol.ref-list li{margin-bottom:.5rem}
+  ol.ref-list a{color:var(--accent)}
+
+  .persona-card{margin-bottom:1.5rem}
+  .persona-card .head{
+    display:flex; justify-content:space-between; align-items:baseline;
+    flex-wrap:wrap; gap:.5rem; margin-bottom:.75rem;
+  }
+  .persona-card h3{margin:0; font-size:1.25rem}
+  .persona-card .role{color:var(--muted); font-size:.9rem}
+  .quote{
+    font-style:italic; color:var(--accent); background:var(--accent-soft);
+    padding:.75rem 1rem; border-radius:8px; margin:.75rem 0;
+  }
+  ul.plain{margin:.25rem 0 0; padding-left:1.1rem}
+  ul.plain li{margin-bottom:.2rem}
+
+  table.pain-table{width:100%; border-collapse:collapse; font-size:.9rem}
+  table.pain-table th, table.pain-table td{
+    text-align:left; padding:.4rem .5rem; border-bottom:1px solid var(--line);
+  }
+
+  footer.doc-footer{
+    color:var(--muted); font-size:.85rem; border-top:1px solid var(--line);
+    padding-top:1rem;
+  }
+
+  @media print{
+    body{background:#fff; padding:0}
+    .card{border:1px solid #ccc}
+    section{page-break-inside:avoid}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="doc-header">
+    <p class="eyebrow">ICP &amp; Personas</p>
+    <h1>Acme B2B — Perfil de Cliente Ideal e Personas</h1>
+    <p class="meta">Gerado em 23/07/2026 · Próxima revisão sugerida: 23/10/2026 · Confiança geral: <strong>Média</strong> (baseado em 8 entrevistas + dados de CRM)</p>
+  </header>
+
+  <section>
+    <h2 class="section-title">Perfil de Cliente Ideal (ICP)</h2>
+    <div class="card grid-2">
+      <div>
+        <dl class="field-list">
+          <dt>Firmografia</dt>
+          <dd>Empresas de logística e e-commerce, 20-200 funcionários, Brasil</dd>
+          <dt>Tecnografia</dt>
+          <dd>Já usa ERP e algum sistema fiscal manual ou planilha; maturidade tecnológica mediana</dd>
+          <dt>Gatilho situacional</dt>
+          <dd>Crescimento de volume de notas fiscais além da capacidade manual da equipe</dd>
+          <dt>Tamanho do segmento <span class="tag fonte">fonte externa <sup>[1]</sup></span></dt>
+          <dd>Empresas de logística e e-commerce representam parcela crescente do total de emissões de CT-e no país</dd>
+          <dt>Critérios de qualificação</dt>
+          <dd><strong>Obrigatório:</strong> time fiscal de 2+ pessoas. <strong>Desqualificante:</strong> menos de 10 funcionários</dd>
+        </dl>
+      </div>
+      <div>
+        <dl class="field-list">
+          <dt>JTBD</dt>
+          <dd>"Quando o volume de XML cresce, quero automatizar o download e a guarda, pra não depender de trabalho manual repetitivo."</dd>
+          <dt>Dor principal <span class="tag assum">suposição — validar</span></dt>
+          <dd>Perda de tempo manual e risco de multa por documento fiscal não arquivado. Severidade 8/10, semanal.</dd>
+          <dt>Objeção mais comum</dt>
+          <dd>"Já temos um jeito de fazer isso" → mostrar custo escondido do processo manual</dd>
+          <dt>Canal principal</dt>
+          <dd>Busca orgânica (SEO fiscal) e indicação de contador</dd>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="section-title">Personas</h2>
+
+    <div class="card persona-card">
+      <div class="head">
+        <h3>Analista Ana <span class="tag valid">validado</span></h3>
+        <span class="role">Analista Fiscal Sênior · Indústria média · 32-45 anos</span>
+      </div>
+      <p>Cuida sozinha do fechamento fiscal mensal de 3 filiais. Trabalha em planilha e sistema fiscal separado, revisa tudo manualmente antes de enviar pro contador.</p>
+      <p class="quote">"Se eu esqueço de baixar uma nota, o problema só aparece na auditoria, meses depois."</p>
+      <table class="pain-table">
+        <tr><th>Dores</th><th>Ganhos desejados</th></tr>
+        <tr><td>Baixa manual de XML todo dia</td><td>Automação do download e guarda</td></tr>
+        <tr><td>Medo de multa por documento perdido</td><td>Alerta automático de inconsistência</td></tr>
+        <tr><td>Retrabalho no fechamento mensal</td><td>Relatório pronto pro contador</td></tr>
+      </table>
+      <p><strong>Insight inesperado:</strong> ela não decide sozinha a compra — precisa validar com o gestor financeiro, mesmo sendo a usuária principal.</p>
+      <p><strong>Mensagem:</strong> dizer "elimina o risco de multa por XML perdido" · evitar "revolucione sua gestão fiscal"</p>
+    </div>
+
+  </section>
+
+  <section>
+    <h2 class="section-title">Fontes e Referências</h2>
+    <div class="card">
+      <ol class="ref-list">
+        <li>[1] Nome do instituto/associação, "Título do estudo ou relatório", ano — <a href="#">link da fonte</a></li>
+      </ol>
+    </div>
+  </section>
+
+  <footer class="doc-footer">
+    Documento gerado pela skill <strong>icp-persona-builder</strong>. Seções marcadas <span class="tag assum">suposição</span> ainda precisam de validação por pesquisa; <span class="tag valid">validado</span> vem de dado interno coletado pelo usuário; <span class="tag fonte">fonte externa</span> vem de pesquisa de mercado pública, citada na seção de Fontes e Referências.
+  </footer>
+
+</div>
+</body>
+</html>
