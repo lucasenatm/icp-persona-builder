@@ -4,13 +4,13 @@
     "name": "lucasenatm"
   },
   "metadata": {
-    "description": "Skill de construção de ICP e personas para Claude Code, com entrega final em HTML autocontido."
+    "description": "Skill de ICP e personas para Claude Code, com entrega final em HTML autocontido."
   },
   "plugins": [
     {
       "name": "icp-persona-builder",
       "source": "./",
-      "description": "Constrói ICP (perfil de cliente ideal) e personas de forma integrada, unindo firmografia, JTBD, dores, objeções, canais e evidência/confiança. Gera um HTML único pronto pra compartilhar."
+      "description": "Monta o ICP (perfil de cliente ideal) e as personas a partir dos dados reais do negócio: 5 componentes, scorecard de green flags e red flags, personas e plano de validação, num HTML visual pronto para compartilhar."
     }
   ]
 }

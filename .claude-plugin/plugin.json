@@ -1,7 +1,7 @@
 {
   "name": "icp-persona-builder",
-  "description": "Constrói ICP (perfil de cliente ideal) e personas de forma integrada, unindo firmografia, JTBD, dores, objeções, canais e evidência/confiança. Gera um HTML único pronto pra compartilhar.",
-  "version": "1.0.0",
+  "description": "Monta o ICP (perfil de cliente ideal) e as personas a partir dos dados reais do negócio: 5 componentes, scorecard de green flags e red flags, personas e plano de validação, num HTML visual pronto para compartilhar.",
+  "version": "1.1.0",
   "author": {
     "name": "lucasena",
     "url": "https://github.com/lucasenatm"
@@ -15,6 +15,7 @@
     "claude-skill",
     "icp",
     "persona",
+    "scorecard",
     "buyer-persona",
     "marketing",
     "b2b",
