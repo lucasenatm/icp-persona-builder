@@ -1,0 +1,599 @@
+<!--
+Template do PDF: ICP & Persona Builder.
+
+Versão diagramada em páginas A4 do mesmo conteúdo do template.html. Cada <section class="page">
+é uma folha. Exemplo preenchido com a empresa fictícia "Acme Fiscal". Ao gerar:
+
+  - Manter o <head> inteiro e o <script> do fim exatamente como estão.
+  - Usar o MESMO conteúdo do HTML, reorganizado nas páginas abaixo.
+  - Ordem das páginas: capa, resumo, componentes, scorecard, motivação e dores,
+    objeções e canais, uma página por persona, plano de validação, fontes.
+  - Cada página tem altura fixa. Se o conteúdo não couber, criar uma página de continuação
+    com o mesmo cabeçalho e "(continuação)" no .pg-sec. Limites seguros por página:
+      componentes ........ 5 componentes com até 4 itens cada
+      scorecard .......... até 8 green flags e 8 red flags, com o "onde checar" em uma linha
+      motivação e dores .. JTBD + até 5 dores
+      objeções e canais .. até 5 objeções + até 7 canais
+      persona ............ 1 por página
+      validação .......... até 3 itens com perguntas por página
+  - O resumo traz as 3 descobertas mais importantes e o sumário. Os números de página do
+    sumário e do rodapé se preenchem sozinhos.
+  - O script marca no <html> o atributo data-overflow com as páginas em que o conteúdo
+    passou do limite (ver references/pdf.md para checar antes de converter).
+  - Sem fonte externa: apagar a página de fontes e o item dela no sumário.
+  - Nada de filter, blur, mix-blend-mode ou backdrop-filter: fazem o PDF virar imagem e pesar MB.
+-->
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>ICP e Personas · Acme Fiscal (PDF)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  @page{size:210mm 297mm; margin:0}
+  :root{
+    --coral:#eb5e4a; --black:#120B09; --off:#efebe5; --white:#faf4f3;
+    --font:"Sora","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  }
+  *{box-sizing:border-box; -webkit-print-color-adjust:exact; print-color-adjust:exact}
+  html,body{margin:0; padding:0}
+  body{font:9.4pt/1.55 var(--font); color:var(--black); background:#cfc9c0}
+  h1,h2,h3,p,ul,ol,dl,dd,blockquote{margin:0}
+  ul,ol{padding:0; list-style:none}
+  a{color:inherit; text-decoration:none}
+  h1,h2,h3,.label,.kickers,.chip,.cat,.sec-num,.conf,.k,.pg-head,.pg-foot,.cover-foot,.toc-row,.pg-sub{text-transform:lowercase}
+
+  /* ── folha ── */
+  .page{
+    --bg:var(--off); --fg:var(--black); --card:var(--white);
+    --muted:rgba(18,11,9,.64); --line:rgba(18,11,9,.13); --line-2:rgba(18,11,9,.26); --soft:rgba(18,11,9,.05);
+    width:210mm; height:297mm; position:relative; overflow:hidden;
+    background:var(--bg); color:var(--fg);
+    display:flex; flex-direction:column; padding:14mm 16mm 11mm;
+    break-after:page; page-break-after:always;
+  }
+  .page:last-child{break-after:auto; page-break-after:auto}
+  .page.dark, .inv{
+    --bg:var(--black); --fg:var(--white); --card:rgba(250,244,243,.05);
+    --muted:rgba(250,244,243,.64); --line:rgba(250,244,243,.14); --line-2:rgba(250,244,243,.28); --soft:rgba(250,244,243,.07);
+  }
+  .inv{background:var(--bg); color:var(--fg)}
+  @media screen{
+    body{padding:10mm 0}
+    .page{margin:0 auto 10mm; box-shadow:0 6mm 18mm rgba(18,11,9,.22)}
+    .page.overflow{outline:2mm solid #e00}
+  }
+
+  .pg-head{display:flex; justify-content:space-between; align-items:center; font:600 7.4pt/1 var(--font); color:var(--muted); padding-bottom:3.2mm; border-bottom:.6pt solid var(--line); margin-bottom:8mm}
+  .pg-brand{font:800 8.6pt/1 var(--font); letter-spacing:-.03em; color:var(--fg)}
+  .pg-brand i, .sq{display:inline-block; width:1.3mm; height:1.3mm; background:var(--coral); margin-left:.5mm}
+  .pg-body{flex:1; min-height:0; display:flex; flex-direction:column; overflow:hidden}
+  .pg-foot{display:flex; justify-content:space-between; align-items:center; font:500 7pt/1 var(--font); color:var(--muted); padding-top:3mm; border-top:.6pt solid var(--line); margin-top:5mm}
+  .pg-num{font:800 8.6pt/1 var(--font); color:var(--fg); letter-spacing:-.02em}
+
+  /* ── elementos comuns ── */
+  .label{display:block; font:600 7pt/1.4 var(--font); color:var(--muted); margin-bottom:1.2mm}
+  .card{background:var(--card); border:.6pt solid var(--line); border-radius:1mm; padding:5mm}
+  .card.inv{background:var(--bg); border-color:transparent}
+  .chip{display:inline-block; font:500 7pt/1 var(--font); padding:1.3mm 2mm; border-radius:.6mm; border:.6pt solid var(--line-2)}
+  .sec{display:grid; grid-template-columns:30mm 1fr; gap:4mm; margin-bottom:7mm; padding-top:3mm; border-top:1.2pt solid var(--fg)}
+  .sec-num{font:800 8.5pt/1.9 var(--font); color:var(--coral)}
+  .sec-num span{color:var(--muted); font-weight:500; margin-left:1.2mm}
+  .sec h2{font:800 25pt/1.02 var(--font); letter-spacing:-.045em}
+  .sec h2::after{content:""; display:inline-block; width:.15em; height:.15em; background:var(--coral); margin-left:.06em}
+  .sec-lede{color:var(--muted); margin-top:2.4mm; font-size:9.2pt; max-width:125mm}
+  .sub-title{font:800 13pt/1.1 var(--font); letter-spacing:-.035em; margin:7mm 0 3.5mm}
+  .sub-title::after{content:""; display:inline-block; width:.17em; height:.17em; background:var(--coral); margin-left:.06em}
+
+  /* ── marcações de evidência ── */
+  .ev{
+    display:inline-flex; align-items:center; gap:1.1mm; vertical-align:.4mm; margin-left:.8mm;
+    font:600 6.3pt/1 var(--font); white-space:nowrap; text-transform:lowercase;
+    padding:.9mm 1.5mm; border-radius:.5mm; border:.6pt solid transparent;
+  }
+  .ev::before{content:""; width:1mm; height:1mm; background:currentColor; flex:none}
+  .ev.dado{background:var(--fg); color:var(--bg)}
+  .ev.dado::before{background:var(--coral)}
+  .ev.fonte{border-color:var(--fg); color:var(--fg)}
+  .ev.sup{border:.6pt dashed var(--coral); color:var(--coral)}
+
+  /* ── capa ── */
+  .cover{padding:18mm 18mm 14mm}
+  .cover::before{
+    content:""; position:absolute; inset:0;
+    background-image:linear-gradient(var(--line) .5pt, transparent .5pt), linear-gradient(90deg, var(--line) .5pt, transparent .5pt);
+    background-size:14mm 14mm;
+    -webkit-mask-image:radial-gradient(ellipse 75% 60% at 90% 8%, #000, transparent 72%);
+            mask-image:radial-gradient(ellipse 75% 60% at 90% 8%, #000, transparent 72%);
+  }
+  .cover .glow{position:absolute; width:190mm; height:190mm; right:-70mm; top:-80mm; background:radial-gradient(circle, rgba(235,94,74,.38), rgba(235,94,74,0) 62%)}
+  .cover > *{position:relative}
+  .kickers{display:flex; justify-content:space-between; font:500 8pt/1 var(--font); color:var(--muted)}
+  .kickers span:first-child::before{content:""; display:inline-block; width:1.8mm; height:1.8mm; background:var(--coral); margin-right:2.5mm}
+  .cover-mid{margin-top:auto}
+  .cover h1{font:800 64pt/.92 var(--font); letter-spacing:-.055em}
+  .cover h1 .dot{display:inline-block; width:.15em; height:.15em; background:var(--coral); margin-left:.05em}
+  .pg-sub{font:400 15pt/1.3 var(--font); color:var(--muted); margin-top:4mm; letter-spacing:-.01em}
+  .oneliner{margin-top:14mm; padding-left:5mm; border-left:1mm solid var(--coral); font:400 14pt/1.45 var(--font); letter-spacing:-.015em}
+  .oneliner b{font-weight:700; background:linear-gradient(transparent 64%, rgba(235,94,74,.45) 64%)}
+  .cover-meta{display:grid; grid-template-columns:repeat(4, 1fr); gap:5mm; margin-top:14mm; padding-top:4mm; border-top:.6pt solid var(--line-2)}
+  .cover-meta strong{display:block; font-weight:600; font-size:8.4pt; line-height:1.45}
+  .cover-foot{display:flex; justify-content:space-between; align-items:center; margin-top:12mm; font:500 7.5pt/1 var(--font); color:var(--muted)}
+  .credito{display:inline-flex; align-items:center; gap:1.8mm; font:500 7.5pt/1 var(--font); color:var(--fg); opacity:.7}
+  .credito img{height:3.4mm; width:auto; display:block}
+
+  /* ── resumo ── */
+  .finds{display:grid; gap:0}
+  .find{display:grid; grid-template-columns:16mm 1fr; gap:3mm; padding:5mm 0; border-bottom:.6pt solid var(--line)}
+  .find:first-child{padding-top:0}
+  .find-n{font:800 26pt/1 var(--font); letter-spacing:-.05em; color:var(--coral)}
+  .find h3{font:700 11.5pt/1.3 var(--font); letter-spacing:-.025em}
+  .find p{margin-top:1.4mm; color:var(--muted)}
+  .meter{display:grid; grid-template-columns:1fr 1.5fr; gap:7mm; align-items:center}
+  .meter-title{font:700 10.5pt/1.3 var(--font); letter-spacing:-.02em}
+  .meter-title small{display:block; font:400 7.6pt/1.5 var(--font); color:var(--muted); margin-top:1mm; letter-spacing:0}
+  .meter-bar{display:flex; height:3mm; gap:.8mm}
+  .meter-bar span{display:block; height:100%; width:33.3%}
+  .meter-bar [data-k=dado]{background:var(--fg)}
+  .meter-bar [data-k=fonte]{background:var(--line-2); box-shadow:inset 0 0 0 .6pt var(--fg)}
+  .meter-bar [data-k=sup]{background:repeating-linear-gradient(45deg, var(--coral) 0 1.3mm, rgba(235,94,74,.4) 1.3mm 2.6mm)}
+  .meter-legend{display:flex; gap:6mm; margin-top:3mm}
+  .meter-legend div{display:flex; align-items:baseline; gap:1.8mm; font-size:7.6pt; color:var(--muted)}
+  .meter-legend b{font:800 14pt/1 var(--font); letter-spacing:-.03em; color:var(--fg)}
+  .meter-legend .k-sup b{color:var(--coral)}
+  .toc{display:grid}
+  .toc-row{display:flex; align-items:baseline; gap:3mm; padding:2.3mm 0; border-bottom:.6pt solid var(--line); font:600 9.5pt/1.3 var(--font)}
+  .toc-row .n{color:var(--coral); font-weight:800; width:8mm}
+  .toc-row .lead{flex:1; border-bottom:.8pt dotted var(--line-2); transform:translateY(-1mm)}
+  .toc-row .p{font-weight:800}
+
+  /* ── componentes ── */
+  .crow{display:grid; grid-template-columns:50mm 1fr; gap:6mm; padding:4.6mm 0; border-top:.6pt solid var(--line)}
+  .crow:first-child{border-top:1.2pt solid var(--fg)}
+  .crow-n{font:800 18pt/1 var(--font); letter-spacing:-.05em; color:var(--coral)}
+  .crow h3{font:700 12pt/1.2 var(--font); letter-spacing:-.025em; margin-top:2mm}
+  .crow .what{font-size:8pt; color:var(--muted); margin-top:.8mm}
+  .facts{display:grid; gap:1.8mm}
+  .facts li{position:relative; padding-left:4mm; line-height:1.5}
+  .facts li::before{content:""; position:absolute; left:0; top:1.6mm; width:1.4mm; height:1.4mm; background:var(--coral)}
+
+  /* ── scorecard ── */
+  .rule{display:flex; gap:5mm; align-items:center; background:var(--coral); color:var(--off); border-radius:1mm; padding:4.5mm 5.5mm; margin-bottom:4mm}
+  .rule .label{color:rgba(239,235,229,.85); margin:0; white-space:nowrap}
+  .rule p{font:500 10.5pt/1.45 var(--font)}
+  .rule b{font-weight:800}
+  .score-grid{display:grid; grid-template-columns:1fr 1fr; gap:4mm; flex:1}
+  .score{border-top:1mm solid var(--fg)}
+  .score.red{border-top-color:var(--coral)}
+  .score h3{display:flex; justify-content:space-between; align-items:baseline; font:800 15pt/1.2 var(--font); letter-spacing:-.04em}
+  .score h3 small{font:500 7pt/1 var(--font); color:var(--muted); letter-spacing:0}
+  .flags{margin-top:2mm}
+  .flags li{display:grid; grid-template-columns:5.5mm 1fr; gap:2.6mm; padding:3mm 0; border-bottom:.6pt dashed var(--line-2)}
+  .flags li:last-child{border-bottom:0}
+  .flags .mk{width:4.6mm; height:4.6mm; border-radius:.5mm; display:grid; place-items:center; font:700 7.5pt/1 var(--font); background:var(--fg); color:var(--bg); margin-top:.3mm}
+  .score.red .mk{background:var(--coral); color:var(--off)}
+  .flags b{font-weight:600; font-size:9.2pt}
+  .flags .how{display:block; font-size:7.6pt; color:var(--muted); margin-top:.4mm}
+  .score-note{margin-top:4mm; font-size:7.6pt; color:var(--muted)}
+
+  /* ── motivação e dores ── */
+  .jtbd{display:grid; grid-template-columns:1.6fr 1fr 1fr; gap:3mm}
+  .jtbd p{font:500 9.6pt/1.5 var(--font); letter-spacing:-.01em}
+  .jtbd .main p{font-size:11pt}
+  .pain{display:grid; grid-template-columns:1.3fr .9fr 1.3fr; gap:5mm; padding:3.6mm 0; border-top:.6pt solid var(--line); align-items:start}
+  .pain:first-of-type{border-top:1.2pt solid var(--fg)}
+  .cat{display:block; font:600 6.8pt/1 var(--font); color:var(--coral); margin-bottom:1.3mm}
+  .pain h3{font:600 9.4pt/1.4 var(--font)}
+  .sev-row{display:flex; align-items:center; gap:2.5mm}
+  .sev{flex:1; height:2.4mm; position:relative; background:linear-gradient(to right, var(--line) calc(100% - .7mm), transparent 0) 0 0/10% 100% repeat-x}
+  .sev::after{content:""; position:absolute; left:0; top:0; bottom:0; width:calc(var(--sev) * 10%); background:linear-gradient(to right, var(--coral) calc(100% - .7mm), transparent 0) 0 0/calc(100% / var(--sev)) 100% repeat-x}
+  .sev-num{font:800 9pt/1 var(--font)}
+  .pain .chip{margin-top:2mm}
+  .pain .cost{font-size:8.6pt; color:var(--muted)}
+
+  /* ── objeções e canais ── */
+  .obj{display:grid; grid-template-columns:1fr 6mm 1.2fr; padding:3.2mm 0; border-top:.6pt solid var(--line); align-items:start}
+  .obj:first-of-type{border-top:1.2pt solid var(--fg)}
+  .obj .say{font:600 9.6pt/1.45 var(--font); letter-spacing:-.01em}
+  .obj .arrow{color:var(--coral); font:700 11pt/1.3 var(--font); text-align:center}
+  .obj .ans{font-size:8.8pt; padding-left:3mm; border-left:.8mm solid var(--coral)}
+  .ch{display:grid; grid-template-columns:52mm 1fr 10mm 30mm; gap:4mm; align-items:center; padding:2.6mm 0; border-top:.6pt solid var(--line)}
+  .ch:first-of-type{border-top:1.2pt solid var(--fg)}
+  .ch .nm{font-weight:600; font-size:9pt; line-height:1.3}
+  .ch .nm small{display:block; font-weight:400; font-size:7.4pt; color:var(--muted)}
+  .bar{height:2mm; background:var(--line)}
+  .bar i{display:block; height:100%; width:calc(var(--rel) * 20%); background:var(--coral)}
+  .ch .val{font:800 9pt/1 var(--font); text-align:right}
+  .ch .ev{justify-self:start}
+
+  /* ── persona ── */
+  .persona{flex:1; display:grid; grid-template-columns:60mm 1fr; border-radius:1mm; overflow:hidden; border:.6pt solid var(--line)}
+  .p-side{padding:7mm 6mm}
+  .mono{width:15mm; height:15mm; border-radius:.6mm; background:var(--coral); color:var(--off); display:grid; place-items:center; font:800 15pt/1 var(--font); letter-spacing:-.03em}
+  .p-side h3{font:800 17pt/1.06 var(--font); letter-spacing:-.045em; margin-top:5mm}
+  .p-side .role{font-size:8.6pt; color:var(--muted); margin-top:1.5mm}
+  .p-chips{display:flex; flex-wrap:wrap; gap:1.4mm; margin-top:4mm}
+  .p-facts{margin-top:6mm; display:grid; gap:4mm}
+  .p-facts dd{font-size:8.4pt; line-height:1.5}
+  .conf{display:inline-flex; align-items:center; gap:1.6mm; font:600 7.6pt/1 var(--font); padding:1.4mm 2.2mm; border-radius:.5mm; border:.6pt solid transparent}
+  .conf::before{content:""; width:1.3mm; height:1.3mm; background:currentColor}
+  .conf.alta{background:var(--fg); color:var(--bg)} .conf.alta::before{background:var(--coral)}
+  .conf.media{border-color:var(--fg); color:var(--fg)}
+  .conf.baixa{border:.6pt dashed var(--coral); color:var(--coral)}
+  .p-main{background:var(--white); padding:7mm 7.5mm; display:flex; flex-direction:column; gap:4.6mm}
+  .quote{position:relative; font:500 12.5pt/1.45 var(--font); letter-spacing:-.02em; padding-top:7.5mm}
+  .quote::before{content:"\201C"; position:absolute; left:-.5mm; top:-1.5mm; font:800 34pt/1 var(--font); color:var(--coral)}
+  .p-jtbd{border:.6pt solid var(--line-2); border-radius:1mm; padding:3.4mm 4mm; font-size:9pt}
+  .gp{display:grid; grid-template-columns:1fr 1fr; gap:5mm}
+  .gp ul{display:grid; gap:1.6mm}
+  .gp li{display:grid; grid-template-columns:3.5mm 1fr; gap:1.5mm; font-size:8.8pt; line-height:1.45}
+  .gp li::before{font:800 9pt/1.45 var(--font)}
+  .gp .minus li::before{content:"\2212"; color:var(--coral)}
+  .gp .plus li::before{content:"+"; color:var(--black)}
+  .insight{background:var(--coral); color:var(--off); border-radius:1mm; padding:4mm 4.5mm; font-size:9pt; line-height:1.55}
+  .insight .label{color:rgba(239,235,229,.85)}
+  .insight .ev.dado{background:var(--black); color:var(--off)}
+  .insight .ev.fonte, .insight .ev.sup{border-color:var(--off); color:var(--off)}
+  .msg{display:grid; gap:2mm}
+  .msg div{display:grid; grid-template-columns:13mm 1fr; gap:2.6mm; align-items:baseline; font-size:9pt}
+  .msg .k{font:600 6.8pt/1 var(--font); padding:1.3mm 0; text-align:center; border-radius:.5mm}
+  .msg .yes .k{background:var(--black); color:var(--white)}
+  .msg .no .k{border:.6pt dashed var(--coral); color:var(--coral)}
+  .p-obj{font-size:9pt}
+  .p-obj q{font-weight:600}
+  .p-ev{margin-top:auto; border-top:.6pt dashed var(--line-2); padding-top:3.4mm; display:grid; gap:1.2mm; font-size:8pt; color:var(--muted)}
+  .p-ev b{color:var(--black); font-weight:600}
+  .p-main .label{color:rgba(18,11,9,.64)}
+
+  /* ── validação ── */
+  .val-item{display:grid; grid-template-columns:14mm 1fr; gap:2mm; padding:4.4mm 0; border-top:.6pt solid var(--line)}
+  .val-item:first-of-type{border-top:1.2pt solid var(--fg)}
+  .val-n{font:800 26pt/1 var(--font); letter-spacing:-.05em; color:var(--coral)}
+  .val-item h3{font:700 11pt/1.35 var(--font); letter-spacing:-.025em}
+  .val-meta{display:flex; flex-wrap:wrap; gap:1.4mm; margin-top:2.4mm}
+  .val-meta b{font-weight:700}
+  .outcomes{display:grid; grid-template-columns:1fr 1fr; gap:2.5mm; margin-top:3mm; font-size:8.6pt}
+  .outcomes div{background:var(--soft); border-radius:.6mm; padding:2.4mm 3mm}
+  .qs{margin-top:3mm}
+  .qs ol{list-style:decimal; padding-left:4.5mm; display:grid; gap:1mm; font-size:8.6pt}
+  .qs ol li::marker{color:var(--muted); font-weight:600}
+  .qs .key{font-weight:700}
+
+  /* ── fontes e fecho ── */
+  .refs{display:grid; gap:3mm}
+  .refs li{display:grid; grid-template-columns:9mm 1fr; font-size:9pt}
+  .refs li span{font:800 8.5pt/1.65 var(--font); color:var(--coral)}
+  .refs a{text-decoration:underline; text-decoration-color:var(--coral); text-underline-offset:.8mm}
+  .legend{display:grid; gap:2.6mm; font-size:8.8pt}
+  .legend p .ev{margin:0 1.5mm 0 0}
+  .closing{margin-top:auto; display:flex; justify-content:space-between; align-items:flex-end; padding-top:6mm; border-top:1.2pt solid var(--fg)}
+  .closing p{font-size:8.4pt; color:var(--muted); max-width:105mm}
+  .closing .credito{opacity:.75}
+</style>
+</head>
+<body>
+
+<!-- ═════════ CAPA ═════════ -->
+<section class="page dark cover">
+  <div class="glow"></div>
+  <div class="kickers"><span>ICP &amp; personas</span><span>edição de 23/07/2026</span></div>
+  <div class="cover-mid">
+    <h1>Acme Fiscal<span class="dot"></span></h1>
+    <p class="pg-sub">quem é o cliente ideal e como falar com ele</p>
+    <blockquote class="oneliner">Indústria ou distribuidora de <b>100 a 500 funcionários</b> no Sul e Sudeste, com time fiscal de 2 a 6 pessoas, que <b>acabou de abrir uma filial</b> ou trocar de ERP e ainda baixa XML na mão.</blockquote>
+    <div class="cover-meta">
+      <div><span class="label">base de evidência</span><strong>CRM com 312 clientes, 8 entrevistas, dados de churn</strong></div>
+      <div><span class="label">foco</span><strong>Indústria e distribuição com mais de uma filial</strong></div>
+      <div><span class="label">clientes-semente</span><strong>24 contas com 18+ meses e uso semanal</strong></div>
+      <div><span class="label">próxima revisão</span><strong>23/10/2026</strong></div>
+    </div>
+  </div>
+  <div class="cover-foot">
+    <span>documento de referência para marketing, vendas e produto</span>
+    <span class="credito">feito por <img src="https://raw.githubusercontent.com/lucasenatm/icp-persona-builder/master/skills/icp-persona-builder/assets/lucasena-off-white.png" alt="lucasena." width="300" height="48"></span>
+  </div>
+</section>
+
+<!-- ═════════ RESUMO ═════════ -->
+<section class="page" id="resumo">
+  <header class="pg-head"><span class="pg-brand">Acme Fiscal<i></i></span><span class="pg-sec">resumo</span></header>
+  <div class="pg-body">
+    <div class="sec"><span class="sec-num">00<span>resumo</span></span><div><h2>Em uma página</h2><p class="sec-lede">As três descobertas que mais mudam a forma de vender para esse cliente.</p></div></div>
+    <div class="finds">
+      <div class="find"><span class="find-n">1</span><div><h3>Abrir filial é o gatilho mais forte</h3><p>Contas que abriram um novo CNPJ nos 6 meses anteriores fecham em metade do tempo. A prospecção deve começar por elas. <span class="ev dado">dado interno</span></p></div></div>
+      <div class="find"><span class="find-n">2</span><div><h3>A analista quer, mas quem assina é o financeiro</h3><p>A venda trava quando a analista precisa convencer o chefe sozinha. Material com a conta das horas destrava. <span class="ev dado">dado interno</span></p></div></div>
+      <div class="find"><span class="find-n">3</span><div><h3>Empresas com menos de 50 funcionários cancelam cedo</h3><p>Respondem por 54% do churn no primeiro ano. Entram como red flag no scorecard. <span class="ev dado">dado interno</span></p></div></div>
+    </div>
+    <h3 class="sub-title">De onde vem cada afirmação</h3>
+    <div class="card meter" id="meter">
+      <div class="meter-title">Evidência do documento<small>Proporção das marcações de evidência. Quanto menos suposição, mais o ICP se apoia em fato.</small></div>
+      <div>
+        <div class="meter-bar"><span data-k="dado"></span><span data-k="fonte"></span><span data-k="sup"></span></div>
+        <div class="meter-legend">
+          <div class="k-dado"><b data-pct="dado">0%</b>dado interno</div>
+          <div class="k-fonte"><b data-pct="fonte">0%</b>fonte externa</div>
+          <div class="k-sup"><b data-pct="sup">0%</b>suposição</div>
+        </div>
+      </div>
+    </div>
+    <h3 class="sub-title">Sumário</h3>
+    <nav class="toc">
+      <a class="toc-row" href="#componentes"><span class="n">01</span>os 5 componentes<span class="lead"></span><span class="p" data-toc="componentes"></span></a>
+      <a class="toc-row" href="#scorecard"><span class="n">02</span>scorecard<span class="lead"></span><span class="p" data-toc="scorecard"></span></a>
+      <a class="toc-row" href="#dores"><span class="n">03</span>motivação e dores<span class="lead"></span><span class="p" data-toc="dores"></span></a>
+      <a class="toc-row" href="#objecoes"><span class="n">04</span>objeções e canais<span class="lead"></span><span class="p" data-toc="objecoes"></span></a>
+      <a class="toc-row" href="#personas"><span class="n">05</span>personas<span class="lead"></span><span class="p" data-toc="personas"></span></a>
+      <a class="toc-row" href="#validacao"><span class="n">06</span>plano de validação<span class="lead"></span><span class="p" data-toc="validacao"></span></a>
+      <a class="toc-row" href="#fontes"><span class="n">07</span>fontes<span class="lead"></span><span class="p" data-toc="fontes"></span></a>
+    </nav>
+  </div>
+  <footer class="pg-foot"><span>ICP &amp; personas · Acme Fiscal</span><span class="pg-num"></span></footer>
+</section>
+
+<!-- ═════════ COMPONENTES ═════════ -->
+<section class="page" id="componentes">
+  <header class="pg-head"><span class="pg-brand">Acme Fiscal<i></i></span><span class="pg-sec">01 · componentes</span></header>
+  <div class="pg-body">
+    <div class="sec"><span class="sec-num">01<span>icp</span></span><div><h2>Os 5 componentes</h2><p class="sec-lede">Firmografia sozinha é segmentação. O ICP de verdade junta quem é a empresa, o que ela usa, o que a faz comprar agora, como ela se comporta e quanto ela vale.</p></div></div>
+    <div>
+      <div class="crow"><div><span class="crow-n">01</span><h3>Firmografia</h3><p class="what">Quem é a empresa</p></div><ul class="facts">
+        <li>Indústria e distribuição, 100 a 500 funcionários <span class="ev dado">dado interno</span></li>
+        <li>Faturamento de R$ 30 a 300 milhões por ano <span class="ev sup">suposição: validar</span></li>
+        <li>Sul e Sudeste, com 2 ou mais CNPJs <span class="ev dado">dado interno</span></li></ul></div>
+      <div class="crow"><div><span class="crow-n">02</span><h3>Tecnografia</h3><p class="what">O que ela já usa</p></div><ul class="facts">
+        <li>ERP de mercado (TOTVS, Sankhya, Omie) <span class="ev dado">dado interno</span></li>
+        <li>Guarda XML em pasta de rede ou e-mail <span class="ev dado">dado interno</span></li>
+        <li>Sem ferramenta fiscal dedicada <span class="ev sup">suposição: validar</span></li></ul></div>
+      <div class="crow"><div><span class="crow-n">03</span><h3>Gatilhos situacionais</h3><p class="what">O que a faz comprar agora</p></div><ul class="facts">
+        <li>Abriu filial ou novo CNPJ nos últimos 6 meses <span class="ev dado">dado interno</span></li>
+        <li>Trocou de ERP <span class="ev dado">dado interno</span></li>
+        <li>Recebeu autuação ou intimação fiscal <span class="ev sup">suposição: validar</span></li></ul></div>
+      <div class="crow"><div><span class="crow-n">04</span><h3>Sinais comportamentais</h3><p class="what">Como ela se comporta antes e durante a compra</p></div><ul class="facts">
+        <li>Conecta o certificado digital no primeiro dia do teste <span class="ev dado">dado interno</span></li>
+        <li>Convida o contador externo para a conta <span class="ev dado">dado interno</span></li>
+        <li>Pede a demonstração com o gerente financeiro junto <span class="ev sup">suposição: validar</span></li></ul></div>
+      <div class="crow"><div><span class="crow-n">05</span><h3>Fit econômico</h3><p class="what">Quanto ela vale</p></div><ul class="facts">
+        <li>Ticket de R$ 1.800 a 4.500 por mês <span class="ev dado">dado interno</span></li>
+        <li>Expande ao abrir novos CNPJs: 38% expandiram em 12 meses <span class="ev dado">dado interno</span></li>
+        <li>Mercado: 6,4 mil indústrias desse porte no Sul e Sudeste <span class="ev fonte">fonte externa [1]</span></li></ul></div>
+    </div>
+  </div>
+  <footer class="pg-foot"><span>ICP &amp; personas · Acme Fiscal</span><span class="pg-num"></span></footer>
+</section>
+
+<!-- ═════════ SCORECARD ═════════ -->
+<section class="page dark" id="scorecard">
+  <header class="pg-head"><span class="pg-brand">Acme Fiscal<i></i></span><span class="pg-sec">02 · scorecard</span></header>
+  <div class="pg-body">
+    <div class="sec"><span class="sec-num">02<span>qualificação</span></span><div><h2>Scorecard</h2><p class="sec-lede">Para vendas decidir em 30 segundos se um lead é o cliente certo. Esta página foi feita para ficar ao lado de quem prospecta.</p></div></div>
+    <div class="rule"><span class="label">regra de uso</span><p><b>3 ou mais green flags e nenhum red flag:</b> prioridade. Um red flag: só segue com motivo claro. Dois ou mais: fora do ICP.</p></div>
+    <div class="score-grid">
+      <div class="card score">
+        <h3>Green flags <small>priorizar</small></h3>
+        <ul class="flags">
+          <li><span class="mk">✓</span><div><b>Tem 2 ou mais CNPJs</b><span class="how">Onde checar: site, consulta de CNPJ</span></div></li>
+          <li><span class="mk">✓</span><div><b>Abriu filial ou trocou de ERP no último ano</b><span class="how">Onde checar: notícias, LinkedIn, primeira conversa</span></div></li>
+          <li><span class="mk">✓</span><div><b>Time fiscal de 2 a 6 pessoas</b><span class="how">Onde checar: LinkedIn da empresa</span></div></li>
+          <li><span class="mk">✓</span><div><b>Usa ERP de mercado</b><span class="how">Onde checar: vagas abertas, primeira conversa</span></div></li>
+          <li><span class="mk">✓</span><div><b>Gerente financeiro participa da conversa</b><span class="how">Onde checar: convite da reunião</span></div></li>
+        </ul>
+      </div>
+      <div class="card score red">
+        <h3>Red flags <small>descartar ou cuidar</small></h3>
+        <ul class="flags">
+          <li><span class="mk">✕</span><div><b>Menos de 50 funcionários</b><span class="how">Geram 54% do churn no primeiro ano</span></div></li>
+          <li><span class="mk">✕</span><div><b>Contabilidade 100% terceirizada</b><span class="how">Quem usaria é o escritório, que não compra</span></div></li>
+          <li><span class="mk">✕</span><div><b>Quer só o arquivo de XML, sem rotina fiscal</b><span class="how">Compra por preço e cancela na renovação</span></div></li>
+          <li><span class="mk">✕</span><div><b>Em processo de venda da empresa</b><span class="how">O sistema muda depois da aquisição</span></div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <footer class="pg-foot"><span>ICP &amp; personas · Acme Fiscal</span><span class="pg-num"></span></footer>
+</section>
+
+<!-- ═════════ MOTIVAÇÃO E DORES ═════════ -->
+<section class="page" id="dores">
+  <header class="pg-head"><span class="pg-brand">Acme Fiscal<i></i></span><span class="pg-sec">03 · motivação e dores</span></header>
+  <div class="pg-body">
+    <div class="sec"><span class="sec-num">03<span>motivação</span></span><div><h2>O que ele quer resolver</h2><p class="sec-lede">O trabalho que o cliente quer fazer e o que dói, ordenado pela severidade.</p></div></div>
+    <div class="jtbd">
+      <div class="card main inv"><span class="label">funcional</span><p>"Quando o volume de notas cresce, quero que o download e a guarda dos XMLs aconteçam sozinhos, para o time fiscal parar de fazer trabalho manual." <span class="ev dado">dado interno</span></p></div>
+      <div class="card"><span class="label">emocional</span><p>Dormir tranquilo sabendo que nenhuma nota ficou para trás. <span class="ev dado">dado interno</span></p></div>
+      <div class="card"><span class="label">social</span><p>Ser visto pela diretoria como quem organizou o fiscal. <span class="ev sup">suposição: validar</span></p></div>
+    </div>
+    <h3 class="sub-title">O que dói e quanto custa</h3>
+    <div class="pain"><div><span class="cat">processo</span><h3>Baixar e organizar XML na mão todo dia <span class="ev dado">dado interno</span></h3></div><div><div class="sev-row"><div class="sev" style="--sev:8"></div><span class="sev-num">8/10</span></div><span class="chip">diária</span></div><p class="cost"><span class="label">custo de não resolver</span>Cerca de 6 horas por semana de um analista fiscal.</p></div>
+    <div class="pain"><div><span class="cat">financeira</span><h3>Risco de multa por documento perdido <span class="ev fonte">fonte externa [2]</span></h3></div><div><div class="sev-row"><div class="sev" style="--sev:7"></div><span class="sev-num">7/10</span></div><span class="chip">aparece na auditoria</span></div><p class="cost"><span class="label">custo de não resolver</span>Multa e retrabalho que só aparecem meses depois.</p></div>
+    <div class="pain"><div><span class="cat">emocional</span><h3>Fechamento do mês sempre no limite <span class="ev sup">suposição: validar</span></h3></div><div><div class="sev-row"><div class="sev" style="--sev:6"></div><span class="sev-num">6/10</span></div><span class="chip">mensal</span></div><p class="cost"><span class="label">custo de não resolver</span>Hora extra e desgaste do time fiscal.</p></div>
+  </div>
+  <footer class="pg-foot"><span>ICP &amp; personas · Acme Fiscal</span><span class="pg-num"></span></footer>
+</section>
+
+<!-- ═════════ OBJEÇÕES E CANAIS ═════════ -->
+<section class="page" id="objecoes">
+  <header class="pg-head"><span class="pg-brand">Acme Fiscal<i></i></span><span class="pg-sec">04 · objeções e canais</span></header>
+  <div class="pg-body">
+    <div class="sec"><span class="sec-num">04<span>objeções</span></span><div><h2>O que ele diz e o que responder</h2></div></div>
+    <div class="obj"><div class="say"><span class="label">inércia</span>"A gente já tem um jeito de fazer isso."</div><div class="arrow">→</div><div class="ans">Mostrar o custo escondido: horas do analista por mês mais o risco de multa. <span class="ev dado">dado interno</span></div></div>
+    <div class="obj"><div class="say"><span class="label">autoridade</span>"Preciso ver com o financeiro."</div><div class="arrow">→</div><div class="ans">Levar o gerente financeiro para a demonstração, com a conta das horas pronta. <span class="ev sup">suposição: validar</span></div></div>
+    <div class="obj"><div class="say"><span class="label">técnica</span>"Vai integrar com o nosso ERP?"</div><div class="arrow">→</div><div class="ans">Lista de integrações prontas e um cliente com o mesmo ERP para indicar. <span class="ev dado">dado interno</span></div></div>
+    <h3 class="sub-title">Onde ele está</h3>
+    <div class="ch"><span class="nm">Indicação de contador<small>Parceria com escritórios</small></span><div class="bar"><i style="--rel:5"></i></div><span class="val">5/5</span><span class="ev dado">dado interno</span></div>
+    <div class="ch"><span class="nm">Busca no Google<small>Termos sobre XML e SPED</small></span><div class="bar"><i style="--rel:4"></i></div><span class="val">4/5</span><span class="ev dado">dado interno</span></div>
+    <div class="ch"><span class="nm">LinkedIn<small>Conteúdo para gerente financeiro</small></span><div class="bar"><i style="--rel:3"></i></div><span class="val">3/5</span><span class="ev sup">suposição: validar</span></div>
+    <div class="ch"><span class="nm">Eventos do setor<small>Feiras de indústria</small></span><div class="bar"><i style="--rel:2"></i></div><span class="val">2/5</span><span class="ev sup">suposição: validar</span></div>
+  </div>
+  <footer class="pg-foot"><span>ICP &amp; personas · Acme Fiscal</span><span class="pg-num"></span></footer>
+</section>
+
+<!-- ═════════ PERSONA (repetir a página por persona; o id="personas" só na primeira) ═════════ -->
+<section class="page" id="personas">
+  <header class="pg-head"><span class="pg-brand">Acme Fiscal<i></i></span><span class="pg-sec">05 · personas · 1 de 2</span></header>
+  <div class="pg-body">
+    <article class="persona">
+      <aside class="p-side inv">
+        <div class="mono">AA</div>
+        <h3>Analista Ana</h3>
+        <p class="role">Analista fiscal sênior</p>
+        <div class="p-chips"><span class="chip">32 a 45 anos</span><span class="chip">indústria média</span><span class="chip">usuária principal</span></div>
+        <dl class="p-facts">
+          <div><dt class="label">na decisão</dt><dd>Recomenda e testa. Quem assina é o gerente financeiro.</dd></div>
+          <div><dt class="label">influenciadores</dt><dd>Contador externo, gerente financeiro, grupos de fiscal no WhatsApp.</dd></div>
+          <div><dt class="label">ferramentas</dt><dd>ERP, portal da Sefaz, planilhas, e-mail.</dd></div>
+          <div><dt class="label">confiança</dt><dd><span class="conf alta">alta</span></dd></div>
+        </dl>
+      </aside>
+      <div class="p-main">
+        <p class="quote">Se eu esqueço de baixar uma nota, o problema só aparece na auditoria, meses depois.</p>
+        <div class="p-jtbd"><span class="label">jtbd</span>"Quando fecho o mês, quero ter todos os XMLs das 3 filiais conferidos, para entregar ao contador sem correr atrás de nota."</div>
+        <div class="gp">
+          <div><span class="label">dores</span><ul class="minus"><li>Baixa XML na mão todo dia</li><li>Medo de multa por nota perdida</li><li>Retrabalho no fechamento</li></ul></div>
+          <div><span class="label">ganhos desejados</span><ul class="plus"><li>Download e guarda automáticos</li><li>Alerta de nota faltando</li><li>Relatório pronto para o contador</li></ul></div>
+        </div>
+        <div class="insight"><span class="label">insight inesperado</span>Ela é quem mais quer a ferramenta, mas evita pedir a compra para não parecer que não dá conta do trabalho. Material que ela possa repassar ao chefe, com a conta das horas, destrava a venda. <span class="ev dado">dado interno</span></div>
+        <div class="msg">
+          <div class="yes"><span class="k">dizer</span><span>"Nenhuma nota fica para trás, e você vê isso em um painel."</span></div>
+          <div class="no"><span class="k">evitar</span><span>"Revolucione a sua gestão fiscal."</span></div>
+        </div>
+        <p class="p-obj"><span class="label">maior objeção</span><q>Vou ter que configurar tudo sozinha?</q> → A implantação é feita junto com ela em uma chamada de 40 minutos.</p>
+        <div class="p-ev">
+          <p><b>Validado:</b> dores e citação de 6 das 8 entrevistas; uso do produto no CRM.</p>
+          <p><b>Suposição:</b> a faixa de idade.</p>
+          <p><b>Em aberto:</b> ela participa da renovação do contrato?</p>
+        </div>
+      </div>
+    </article>
+  </div>
+  <footer class="pg-foot"><span>ICP &amp; personas · Acme Fiscal</span><span class="pg-num"></span></footer>
+</section>
+
+<section class="page">
+  <header class="pg-head"><span class="pg-brand">Acme Fiscal<i></i></span><span class="pg-sec">05 · personas · 2 de 2</span></header>
+  <div class="pg-body">
+    <article class="persona">
+      <aside class="p-side inv">
+        <div class="mono">GG</div>
+        <h3>Gerente Gustavo</h3>
+        <p class="role">Gerente financeiro</p>
+        <div class="p-chips"><span class="chip">40 a 55 anos</span><span class="chip">indústria média</span><span class="chip">decisor</span></div>
+        <dl class="p-facts">
+          <div><dt class="label">na decisão</dt><dd>Assina até R$ 5 mil por mês sem aprovação da diretoria.</dd></div>
+          <div><dt class="label">influenciadores</dt><dd>Diretor financeiro, contador, outros gerentes do setor.</dd></div>
+          <div><dt class="label">ferramentas</dt><dd>ERP, BI, planilhas de fluxo de caixa.</dd></div>
+          <div><dt class="label">confiança</dt><dd><span class="conf media">média</span></dd></div>
+        </dl>
+      </aside>
+      <div class="p-main">
+        <p class="quote">Não quero mais uma ferramenta. Quero saber que o fiscal não vai me dar susto.</p>
+        <div class="p-jtbd"><span class="label">jtbd</span>"Quando a empresa abre uma filial, quero que o fiscal acompanhe sem contratar mais gente, para crescer sem aumentar o risco."</div>
+        <div class="gp">
+          <div><span class="label">dores</span><ul class="minus"><li>Custo do time fiscal crescendo</li><li>Risco que ele não enxerga</li><li>Depende de uma pessoa só</li></ul></div>
+          <div><span class="label">ganhos desejados</span><ul class="plus"><li>Crescer sem contratar no fiscal</li><li>Visão do risco em um painel</li><li>Processo que não depende de ninguém</li></ul></div>
+        </div>
+        <div class="insight"><span class="label">insight inesperado</span>O argumento que fecha com ele é a dependência: o medo de a analista sair e levar o processo junto. Tempo economizado pesa menos. <span class="ev sup">suposição: validar</span></div>
+        <div class="msg">
+          <div class="yes"><span class="k">dizer</span><span>"O processo fiscal deixa de depender de uma pessoa."</span></div>
+          <div class="no"><span class="k">evitar</span><span>Detalhe técnico de XML e SPED.</span></div>
+        </div>
+        <p class="p-obj"><span class="label">maior objeção</span><q>Agora não é prioridade.</q> → Mostrar quanto custa a próxima filial sem automação.</p>
+        <div class="p-ev">
+          <p><b>Validado:</b> alçada de compra (CRM).</p>
+          <p><b>Suposição:</b> o insight de dependência e a citação.</p>
+          <p><b>Em aberto:</b> entrevistar 5 gerentes financeiros de clientes.</p>
+        </div>
+      </div>
+    </article>
+  </div>
+  <footer class="pg-foot"><span>ICP &amp; personas · Acme Fiscal</span><span class="pg-num"></span></footer>
+</section>
+
+<!-- ═════════ VALIDAÇÃO ═════════ -->
+<section class="page dark" id="validacao">
+  <header class="pg-head"><span class="pg-brand">Acme Fiscal<i></i></span><span class="pg-sec">06 · plano de validação</span></header>
+  <div class="pg-body">
+    <div class="sec"><span class="sec-num">06<span>próximos passos</span></span><div><h2>Plano de validação</h2><p class="sec-lede">O que ainda é suposição, em ordem de impacto, e como transformar em dado.</p></div></div>
+    <div class="val-item"><span class="val-n">1</span><div>
+      <h3>O medo de depender de uma pessoa fecha a venda com o gerente financeiro?</h3>
+      <div class="val-meta"><span class="chip"><b>como:</b> entrevista de 20 min</span><span class="chip"><b>com quem:</b> 5 gerentes financeiros de clientes</span><span class="chip"><b>prazo:</b> 3 semanas</span></div>
+      <div class="outcomes"><div><span class="label">se confirmar</span>Vira a mensagem principal para o decisor.</div><div><span class="label">se cair</span>Voltar para o argumento de horas economizadas.</div></div>
+      <div class="qs"><span class="label">perguntas para a entrevista</span><ol>
+        <li class="key">O que aconteceu na sua empresa que fez você procurar uma solução como a nossa naquele momento?</li>
+        <li>Quem mais participou da decisão?</li>
+        <li>O que preocupava você antes de contratar?</li>
+        <li>O que faria você trocar de fornecedor?</li></ol></div>
+    </div></div>
+    <div class="val-item"><span class="val-n">2</span><div>
+      <h3>A faixa de faturamento do ICP está certa?</h3>
+      <div class="val-meta"><span class="chip"><b>como:</b> cruzar CRM com consulta de CNPJ</span><span class="chip"><b>com quem:</b> os 24 clientes-semente</span><span class="chip"><b>prazo:</b> 1 semana</span></div>
+      <div class="outcomes"><div><span class="label">se confirmar</span>Usar a faixa nos filtros de mídia e de prospecção.</div><div><span class="label">se cair</span>Ajustar a firmografia e o scorecard.</div></div>
+    </div></div>
+  </div>
+  <footer class="pg-foot"><span>ICP &amp; personas · Acme Fiscal</span><span class="pg-num"></span></footer>
+</section>
+
+<!-- ═════════ FONTES E FECHO ═════════ -->
+<section class="page" id="fontes">
+  <header class="pg-head"><span class="pg-brand">Acme Fiscal<i></i></span><span class="pg-sec">07 · fontes</span></header>
+  <div class="pg-body">
+    <div class="sec"><span class="sec-num">07<span>fontes</span></span><div><h2>Fontes e referências</h2></div></div>
+    <ol class="refs">
+      <li><span>[1]</span><div>Nome do instituto, "Título do estudo", 2025. <a href="#">link da fonte</a></div></li>
+      <li><span>[2]</span><div>Nome da associação, "Título do relatório", 2026. <a href="#">link da fonte</a></div></li>
+    </ol>
+    <h3 class="sub-title">Como ler este documento</h3>
+    <div class="legend" data-no-count>
+      <p><span class="ev dado">dado interno</span>Veio dos dados da empresa: CRM, entrevistas, pesquisas, uso do produto.</p>
+      <p><span class="ev fonte">fonte externa</span>Veio de pesquisa pública, citada acima.</p>
+      <p><span class="ev sup">suposição</span>Hipótese de trabalho. Está no plano de validação.</p>
+    </div>
+    <div class="closing">
+      <p>Revisar a cada trimestre, ou antes se mudar preço, produto ou mercado. Próxima revisão sugerida: 23/10/2026.</p>
+      <span class="credito">feito por <img src="https://raw.githubusercontent.com/lucasenatm/icp-persona-builder/master/skills/icp-persona-builder/assets/lucasena-preta.png" alt="lucasena." width="300" height="48"></span>
+    </div>
+  </div>
+  <footer class="pg-foot"><span>ICP &amp; personas · Acme Fiscal</span><span class="pg-num"></span></footer>
+</section>
+
+<script>
+  (function () {
+    var pages = Array.prototype.slice.call(document.querySelectorAll('.page'));
+    // números de página no rodapé e no sumário
+    pages.forEach(function (p, i) {
+      var n = p.querySelector('.pg-num');
+      if (n) n.textContent = String(i + 1).padStart(2, '0');
+    });
+    document.querySelectorAll('[data-toc]').forEach(function (el) {
+      var alvo = document.getElementById(el.getAttribute('data-toc'));
+      if (alvo) el.textContent = String(pages.indexOf(alvo.closest('.page')) + 1).padStart(2, '0');
+      else el.closest('.toc-row').style.display = 'none';
+    });
+    // medidor de evidência
+    var tags = Array.prototype.filter.call(document.querySelectorAll('.ev'), function (el) { return !el.closest('[data-no-count]'); });
+    var count = { dado: 0, fonte: 0, sup: 0 };
+    tags.forEach(function (el) { Object.keys(count).forEach(function (k) { if (el.classList.contains(k)) count[k]++; }); });
+    var total = count.dado + count.fonte + count.sup, meter = document.getElementById('meter');
+    if (meter && total) Object.keys(count).forEach(function (k) {
+      meter.querySelector('[data-k="' + k + '"]').style.width = (count[k] / total * 100) + '%';
+      meter.querySelector('[data-pct="' + k + '"]').textContent = Math.round(count[k] / total * 100) + '%';
+    });
+    // páginas em que o conteúdo passou do limite
+    function checar() {
+      var cheias = [];
+      pages.forEach(function (p, i) {
+        var b = p.querySelector('.pg-body') || p;
+        var passou = b.scrollHeight > b.clientHeight + 1;
+        p.classList.toggle('overflow', passou);
+        if (passou) cheias.push(i + 1);
+      });
+      document.documentElement.setAttribute('data-overflow', cheias.join(','));
+      document.documentElement.setAttribute('data-pages', pages.length);
+    }
+    checar();
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(checar);
+  })();
+</script>
+</body>
+</html>
