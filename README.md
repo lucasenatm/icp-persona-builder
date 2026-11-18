@@ -30,52 +30,56 @@ Funciona para qualquer negócio, B2B ou B2C. Sem dado nenhum, ela também roda: 
 
 ## Instalação
 
-### Dentro do Claude Code
+### Copie, cole e pronto
 
-Abra o Claude Code no terminal e rode os dois comandos, um de cada vez:
-
-```
-/plugin marketplace add lucasenatm/icp-persona-builder
-```
+Copie o texto abaixo, cole no Claude Code e aperte enter. Funciona no app do Claude, no VS Code e no terminal.
 
 ```
-/plugin install icp-persona-builder@icp-persona-builder
+Instala para mim a skill de ICP e personas do Lucas Sena.
+
+1. Rode este comando: claude plugin install icp-persona-builder --marketplace lucasenatm/icp-persona-builder
+2. Se o comando "claude" não existir nesta máquina, baixe https://github.com/lucasenatm/icp-persona-builder/archive/refs/heads/master.zip, descompacte e copie a pasta skills/icp-persona-builder para ~/.claude/skills/icp-persona-builder
+3. No final, me diga em uma frase se deu certo e o que eu faço para começar a usar.
 ```
 
-No segundo, escolha **Install for you** para ter a skill em qualquer pasta. Se aparecer `Run /reload-plugins to apply`, rode `/reload-plugins` (ou feche e abra o Claude Code).
+Se o Claude pedir permissão para rodar o comando, é só aceitar. Depois, abra uma conversa nova e peça: **"monta o ICP da minha empresa"**.
 
-### Pelo terminal do sistema
+### Sem Claude Code (site ou app do Claude)
 
-Sem abrir o Claude Code:
+No claude.ai ou no app do Claude, vá em **Customize > Plugins**, clique em **Add > Add marketplace**, cole `lucasenatm/icp-persona-builder` e instale o `icp-persona-builder` que aparece na lista.
+
+Precisa de plano pago e da opção **Code execution and file creation** ligada em **Settings > Capabilities**. O plugin fica salvo na sua conta e também aparece no Claude Code. Se ali não der para gerar o PDF direto, a skill entrega um arquivo para você salvar como PDF pelo navegador (Ctrl+P).
+
+<details>
+<summary><b>Prefere digitar os comandos?</b></summary>
+
+Dentro do Claude Code:
 
 ```
-claude plugin marketplace add lucasenatm/icp-persona-builder
-claude plugin install icp-persona-builder@icp-persona-builder
+/plugin install icp-persona-builder --marketplace lucasenatm/icp-persona-builder
 ```
 
-A skill aparece na próxima vez que você abrir o Claude Code.
+Escolha **Install for you** e, se aparecer `Run /reload-plugins to apply`, rode `/reload-plugins`. Em versões antigas do Claude Code, use dois comandos: `/plugin marketplace add lucasenatm/icp-persona-builder` e depois `/plugin install icp-persona-builder@icp-persona-builder`.
 
-### VS Code e app desktop
+Pelo terminal do sistema, sem abrir o Claude Code:
 
-No painel do Claude Code no VS Code, digite `/plugins`, adicione `lucasenatm/icp-persona-builder` na aba **Marketplaces** e instale o plugin na aba **Plugins**.
+```
+claude plugin install icp-persona-builder --marketplace lucasenatm/icp-persona-builder
+```
 
-O terminal, o VS Code e o app desktop leem as mesmas configurações: instalou em um, vale nos outros.
-
-### Conferir se deu certo
-
-Digite `/` e procure por `icp-persona-builder`. A skill aparece como `/icp-persona-builder:icp-persona-builder`.
+</details>
 
 ### O que precisa ter
 
-- **Claude Code**
-- **Chrome, Edge, Chromium ou Brave**, para gerar o PDF. O Edge já vem em todo Windows. A skill usa o navegador em modo invisível e não instala nada.
-- **Internet**, para a pesquisa de mercado e para a fonte do documento
+- **Claude Code** ou **plano pago do Claude** (para usar pelo site ou pelo app)
+- **Chrome, Edge, Chromium ou Brave** para gerar o PDF. O Edge já vem em todo Windows, e a skill não instala nada.
+- **Internet** para a pesquisa de mercado
 
 ---
 
 ## Como usar
 
-Digite `/icp-persona-builder:icp-persona-builder` ou só peça: "define meu cliente ideal", "cria uma persona para o meu produto", "quem é o meu ICP".
+Abra uma conversa nova e só peça: "monta o ICP da minha empresa", "define meu cliente ideal", "cria uma persona para o meu produto". Se preferir o comando, digite `/` e procure por `icp-persona-builder`.
 
 O fluxo:
 
@@ -93,12 +97,13 @@ O fluxo:
 
 ## Atualizar
 
-Plugins de fora da loja oficial do Claude Code não se atualizam sozinhos. Para pegar a versão nova:
+A skill não se atualiza sozinha. Para pegar a versão mais nova, cole no Claude Code:
 
-- **Dentro do Claude Code:** rode `/plugin`, vá na aba **Marketplaces**, selecione `icp-persona-builder` e escolha **Update marketplace**. Na mesma tela, **Enable auto-update** deixa a atualização automática daqui para frente.
-- **Pelo terminal do sistema:** `claude plugin update icp-persona-builder@icp-persona-builder`
+```
+Atualiza a skill icp-persona-builder para a versão mais nova. Rode: claude plugin update icp-persona-builder@icp-persona-builder. Se ela estiver instalada como pasta em ~/.claude/skills/icp-persona-builder, baixe de novo https://github.com/lucasenatm/icp-persona-builder/archive/refs/heads/master.zip e troque a pasta pela nova.
+```
 
-Depois, rode `/reload-plugins` ou abra uma sessão nova. As mudanças de cada versão estão em [Releases](https://github.com/lucasenatm/icp-persona-builder/releases).
+Depois, abra uma conversa nova. Pelo site ou app do Claude, a atualização fica em **Customize > Plugins**. As mudanças de cada versão estão em [Releases](https://github.com/lucasenatm/icp-persona-builder/releases).
 
 ---
 
